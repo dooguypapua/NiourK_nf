@@ -7,15 +7,15 @@
 **********************************************************************
 */
 // Colors
-c_reset  = params.monochrome_logs ? '' : "\033[0m";
-c_dim    = params.monochrome_logs ? '' : "\033[2m";
-c_header = params.monochrome_logs ? '' : "\033[38;2;93;191;230m";
-c_subtitle = params.monochrome_logs ? '' : "\033[38;2;230;132;93m";
-c_light1 = params.monochrome_logs ? '' : "\033[38;2;252;146;86m";
-c_light2 = params.monochrome_logs ? '' : "\033[38;2;200;200;200m";
-c_grey = params.monochrome_logs ? '' : "\033[38;2;150;150;150m";
-c_red = params.monochrome_logs ? '' : "\033[38;2;212;64;89m";
-c_green = params.monochrome_logs ? '' : "\033[38;2;55;200;113m";
+c_reset  = params.monochrome ? '' : "\033[0m";
+c_dim    = params.monochrome ? '' : "\033[2m";
+c_header = params.monochrome ? '' : "\033[38;2;93;191;230m";
+c_subtitle = params.monochrome ? '' : "\033[38;2;230;132;93m";
+c_light1 = params.monochrome ? '' : "\033[38;2;252;146;86m";
+c_light2 = params.monochrome ? '' : "\033[38;2;200;200;200m";
+c_grey = params.monochrome ? '' : "\033[38;2;150;150;150m";
+c_red = params.monochrome ? '' : "\033[38;2;212;64;89m";
+c_green = params.monochrome ? '' : "\033[38;2;55;200;113m";
 
 def helpMessage(strError) {
     log.info niourkHeader()
@@ -215,7 +215,7 @@ println "🅴 🆇 🅴 🅲 🆄 🆃 🅸 🅾 🅽"
 
 /* ABOUT header */
 def niourkHeader() {""
-    if (!params.monochrome_logs) println c_header
+    if (!params.monochrome) println c_header
     Date start = new Date();
     startFormat = start.toString(); 
     return """
@@ -231,7 +231,7 @@ Support    : https://github.com/dooguypapua/NiourK_nf
 
 /*  DIGEST header */
 def digestHeader() {""
-    if (!params.monochrome_logs) print c_subtitle
+    if (!params.monochrome) print c_subtitle
     if (params.platform=="IonTorrent")
     {
       if (mitoMode==true) callers = "TVC, Mutect2, Deepvariant"
@@ -308,7 +308,7 @@ process ValidateBamFile {
       """
       ${params.path_gatk} --java-options ${java_options} ValidateSamFile -I ${sample}.bam >/dev/null 2>&1 || (>&2 echo "🅴 🆁 🆁 🅾 🆁 ValidateSamFile" && exit 1)
 
-      python3 $workflow.projectDir/scripts/Nk_checkBam.py refCompatibility ${params.path_samtools} ${task.cpus} ${sample}.bam $workflow.projectDir/reference/${params.genome}/${params.genome}.dict
+      python3 $workflow.projectDir/scripts/Nk_checkBam.py ${params.path_samtools} ${task.cpus} ${sample}.bam $workflow.projectDir/reference/${params.genome}/${params.genome}.dict
 
       echo "SUCCESS" > BamValidated.txt
       """
