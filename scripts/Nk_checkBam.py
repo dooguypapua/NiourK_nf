@@ -5,7 +5,7 @@
 # author          : dooguypapua                      |
 # copyright       : CHU Angers                       |
 # date            : 20200522                         |
-# version         : 0.2                              |
+# version         : 0.1                              |
 # python_version  : 3.8.2                            |
 #==================================================================
 # USAGE: Nk_checkBam.py refCompatibility 

@@ -5,7 +5,7 @@
 # author          : dooguypapua                      |
 # copyright       : CHU Angers                       |
 # date            : 20200525                         |
-# version         : 0.2                              |
+# version         : 0.1                              |
 # python_version  : 3.8.2                            |
 #==========================================================================================================
 # USAGE: Nk_mergeVCFs.py path_gatk pathVT pathVcfValidator pathVCFraw pathFasta DPfilter sample VCFin ... VCFin

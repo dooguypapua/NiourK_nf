@@ -1,5 +1,5 @@
 #March 7, 2013
-#Training dataset(s): Proton I Exome;
+#Training dataset(s) : Proton I Exome;
 #hpSize	hpBase	numInspectedMotifs	numSelectedMotifs	mfSearchFreq	mfSearchPPV	mfSearchSSE_Rate	leftKmerMin	leftKmerMax	leftDeltaMin	leftDeltaMax	rightKmerMin	rightKmerMax	rightDeltaMin	rightDeltaMax	preERate	postERate	TP	Pos	FP	Neg	CLASS-PPV	CLASS-ERR
 #2	A	180252	42	20	0.2	0.1	0	4	0	3	0	3	0	2	0.0059	0.0048	474	2502	1983	418280	0.1894	0.0047
 #2	C	244111	33	20	0.2	0.1	0	4	0	3	0	3	0	2	0.0085	0.0074	505	3761	2264	438705	0.1343	0.0052

@@ -15,7 +15,6 @@ Naive_Kettle
 Naive_Kettledrum
 Naive_Key
 Naive_Keyboard
-Naive_Keyboarding
 Naive_Keystone
 Naive_Kick
 Naive_Kick-off
