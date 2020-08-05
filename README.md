@@ -3,6 +3,8 @@
 
 <b>NiourK is a NGS clinical workflow.</b><br/>
 
+## Usage
+```markdown
 The typical command for running the pipeline is as follows:
 
   nextflow run niourk.nf --pathBam bamfolder --pathOut results --genome GRCh37 [arguments]
@@ -50,3 +52,4 @@ The typical command for running the pipeline is as follows:
   Other options:
     --help                      Print help
     --monochrome                Disable ansi colors
+```
