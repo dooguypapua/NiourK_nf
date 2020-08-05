@@ -18,7 +18,7 @@ import time
 import subprocess
 
 
-lstTools = ["gatk","deepvariant","vt","strelka","vep","vcfanno","samtools","bedtools","tvc","octopus","vcf-validator"]
+lstTools = ["gatk","deepvariant","vt","strelka","vep","vcfanno","samtools","mosdepth","tvc","vcf-validator","vepplugin"]
 dico_tools_version = { 'module':sys.argv[0],\
                        'date':time.strftime("%c %Z", time.localtime()) }
 lstErrors = []
@@ -63,7 +63,13 @@ for i in range(1,len(sys.argv),1):
             elif toolName=="vcf-validator":
                 try: toolVersion = subprocess.check_output(toolPath+" -v",stderr=subprocess.STDOUT, shell=True).decode().split("\n")[0].split(" ")[2]
                 except: lstErrors.append("Unable to check `"+toolName+"` version")
-            else: # "samtools","bedtools","tvc","octopus"
+            elif toolName=="vepplugin":
+                try:
+                    toolVersion = []
+                    for file in os.listdir(toolPath):
+                        if os.path.isfile(toolPath+"/"+file) and not "tbi" in file: toolVersion.append(os.readlink(toolPath+"/"+file))
+                except: lstErrors.append("Unable to check `"+toolName+"` version")
+            else: # "samtools","mosdepth","tvc"
                 try: toolVersion = subprocess.check_output(toolPath+" --version",stderr=subprocess.STDOUT, shell=True).decode().split(" ")[1].split("\n")[0].replace("v","")
                 except: lstErrors.append("Unable to check `"+toolName+"` version")
             # Add to dico

@@ -22,15 +22,15 @@ import matplotlib.pyplot as plt
 
 #***** Check if BAM header correspund to reference FASTA
 if sys.argv[1] == "refCompatibility":
-    if len(sys.argv)!=6: exit("[Nk_checkBam refCompatibility] Missing arguments")
+    if len(sys.argv)!=6: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] Missing arguments")
     path_samtools = sys.argv[2]
-    if not os.path.isfile(path_samtools): exit("[Nk_checkBam refCompatibility] Unable to find file `"+path_samtools+"`")
+    if not os.path.isfile(path_samtools): exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] Unable to find file `"+path_samtools+"`")
     try: nb_threads = int(sys.argv[3])
-    except: exit("[Nk_checkBam refCompatibility] Invalid thread parameter `"+nb_threads+"`")
+    except: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] Invalid thread parameter `"+nb_threads+"`")
     path_bam = sys.argv[4]
-    if not os.path.isfile(path_bam): exit("[Nk_checkBam refCompatibility] Unable to find file `"+path_bam+"`")
+    if not os.path.isfile(path_bam): exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] Unable to find file `"+path_bam+"`")
     path_ref_dict = sys.argv[5]
-    if not os.path.isfile(path_ref_dict): exit("[Nk_checkBam refCompatibility] Unable to find file `"+path_ref_dict+"`")
+    if not os.path.isfile(path_ref_dict): exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] Unable to find file `"+path_ref_dict+"`")
     dico_compare = {}
     lst_diffsize = []
     lst_absentInBam = []
@@ -38,7 +38,7 @@ if sys.argv[1] == "refCompatibility":
     # Retrieve BAM header
     process = subprocess.Popen([path_samtools+" view -@ "+str(nb_threads)+" -H "+path_bam], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     output, errors = process.communicate()
-    if process.returncode!=0: exit("[Nk_checkBam refCompatibility] samtools view -H")
+    if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility] samtools view -H")
     for line in output.decode('utf-8').split("\n"):
         if line.__contains__("@SQ"):
             split_line = line.split("\t")
@@ -65,20 +65,22 @@ if sys.argv[1] == "refCompatibility":
     if len(lst_absentInBam)>0: errors+="    "+str(len(lst_absentInBam)).rjust(3)+" contig(s) not found in BAM header\n"
     if len(lst_absentInDict)>0: errors+="    "+str(len(lst_absentInDict)).rjust(3)+" contig(s) not found in REF dict\n"
     if len(lst_diffsize)>0: errors+="    "+str(len(lst_diffsize)).rjust(3)+" contig(s) with ≠ length\n"
-    if errors!="": exit("[Nk_checkBam refCompatibility]\n  Incompatible specified BAM & REF\n"+errors[:-1])
+    if errors!="": exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam refCompatibility]\n  Incompatible specified BAM & REF\n"+errors[:-1])
 
 
 
 #***** PLOT BamIndexStats files *****#
 elif sys.argv[1] == "plotBamidxstats":
     # Arguments
-    if len(sys.argv)!=3: exit("[Nk_checkBam plotBamidxstats] Missing arguments")
-    if not os.path.isfile(sys.argv[2]): exit("[Nk_checkBam plotBamidxstats] Unable to find file `"+sys.argv[2]+"`")
+    if len(sys.argv)!=3: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam plotBamidxstats] Missing arguments")
+    if not os.path.isfile(sys.argv[2]): exit("🅴 🆁 🆁 🅾 🆁\n[Nk_checkBam plotBamidxstats] Unable to find file `"+sys.argv[2]+"`")
     path_bamidxstats = sys.argv[2]
     dico_count = {}
     #***** PARSE BamIndexStats merge file *****#
     IN = open(path_bamidxstats,'r')
     lst_results = IN.read().split("==>")
+    # Only one BAM
+    if len(lst_results)==1: lst_results[0] = "==> IonXpress_060.bamidxstats <==\n"+lst_results[0]
     IN.close()
     for results in lst_results:
         if results.__contains__(".bamidxstats <=="):

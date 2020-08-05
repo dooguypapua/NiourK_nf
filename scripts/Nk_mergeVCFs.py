@@ -24,7 +24,7 @@ def sortVCF(pathVCFUnsorted,pathVCFSorted):
     cmd_sort_vcf = path_gatk+" SortVcf -I "+pathVCFUnsorted+" -O "+pathVCFSorted
     process = subprocess.Popen([cmd_sort_vcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = process.communicate()
-    if process.returncode!=0: exit("[Nk_mergeVCFs] Sort merged VCF\n    "+err.decode('utf-8'))
+    if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Sort merged VCF\n    "+err.decode('utf-8'))
 
 
 
@@ -102,7 +102,7 @@ for path_vcf in lst_vcf_arg:
         elif not os.path.splitext(path_vcf)[1]==".vcf": errors+="    Invalid input VCF extension `"+path_vcf+"`\n"
         else: lst_vcf_sample.append(path_vcf)
 if len(path_vcf)==0: errors+="    Any correspunding VCF found for input sample `"+sample+"`\n"
-if errors!="": exit("[Nk_mergeVCFs] Arguments\n"+errors[:-1])
+if errors!="": exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Arguments\n"+errors[:-1])
 
 
 #***** VCF INPUT LOOP *****#
@@ -124,29 +124,33 @@ for path_vcf in lst_vcf_sample:
     cmd_format_vcf+= " ; mv "+path_temp_temp_vcf+" "+path_temp_vcf
     process = subprocess.Popen([cmd_format_vcf], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = process.communicate()
-    if process.returncode!=0: exit("[Nk_mergeVCFs] Format & encode\n    "+err.decode('utf-8'))
+    if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Format & encode\n    "+err.decode('utf-8'))
 
     #***** FILTER by DP *****#
     cmd_vcffilter = path_gatk+" VariantFiltration --output "+path_filtered_vcf+" --variant "+path_temp_vcf+" --filter-expression \"DP >= "+str(dp_filter)+"\" --filter-name \"DepthofQuality\""
     process = subprocess.Popen([cmd_vcffilter], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = process.communicate()
-    if process.returncode!=0: exit("[Nk_mergeVCFs] DP VariantFiltration\n    "+err.decode('utf-8'))
+    if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] DP VariantFiltration\n    "+err.decode('utf-8'))
+    # reencode gatk date
+    cmd_format_vcf+= "old_encoding=$(file --brief --mime-encoding "+path_filtered_vcf+")" # 5 - detect VCF encoding
+    cmd_format_vcf+= " ; iconv -f $old_encoding -t utf-8 "+path_filtered_vcf+" > "+path_temp_temp_vcf # 6 - convert encoding
+    cmd_format_vcf+= " ; mv "+path_temp_temp_vcf+" "+path_filtered_vcf
 
     #***** SORT VCF *****#
-    sortVCF(path_temp_vcf,path_filteredSort_vcf)
+    sortVCF(path_filtered_vcf,path_filteredSort_vcf)
 
     #***** VALIDATE *****#
     boolvalid,lst_errors = validateVCF(path_vcfvalidator,path_filteredSort_vcf)
-    if boolvalid==False: exit("[Nk_mergeVCFs] Validate VCF `"+os.path.basename(path_vcf)+"`\n    "+"\n    ".join(lst_errors))
+    if boolvalid==False: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Validate VCF `"+os.path.basename(path_filteredSort_vcf)+"`\n    "+"\n    ".join(lst_errors))
 
     #***** COPY VCF to raw output folder *****#
-    shutil.copy(path_filteredSort_vcf,pathVCFraw+"/"+os.path.basename(path_vcf))
+    shutil.copy(path_filteredSort_vcf,pathVCFraw+"/"+os.path.basename(path_filteredSort_vcf))
     
     #***** DECOMPOSE & NORMALIZE *****#
     cmd_vt = path_vt+" decompose -s "+path_filteredSort_vcf+" | "+path_vt+" normalize -r "+pathFasta+" -o "+path_normalized_vcf+" -"
     process = subprocess.Popen([cmd_vt], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = process.communicate()
-    if process.returncode!=0: exit("[Nk_mergeVCFs] Decompose & Normalize\n    "+err.decode('utf-8'))
+    if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Decompose & Normalize\n    "+err.decode('utf-8'))
 
 
 
@@ -155,7 +159,7 @@ lst_caller_name = []
 lst_contig_line = []
 dico_filter_line = {}
 dico_vcf = {}
-pathMergeVCF = sample+"_NkMerged.vcf"
+pathMergeVCF = sample+"_Nk.vcf"
 pathMergeUnsortedVCF = pathMergeVCF.replace(".vcf","_unsorted.vcf")
 #***** INIT new vcf header *****#
 new_header = vcfpy.Header(lines=None, samples=None)
@@ -252,7 +256,7 @@ for var_id in dico_vcf:
     if "PASS" in lst_filter: field_filter = "PASS"
     else: field_filter = "FILTER"
     # Info
-    dico_info = { "CALLNB":[nb_call], "CALLAF":["|".join(numpy.array(lst_af,dtype=str))], "CALLFILTER":["|".join(lst_filter)], "CALLQUAL":["|".join(numpy.array(lst_qual,dtype=str))] }
+    dico_info = { "CALLNB":[nb_call], "CALLAF":["|".join(numpy.array(lst_af,dtype=str))], "CALLFILTER":["|".join(lst_filter).replace(" ","")], "CALLQUAL":["|".join(numpy.array(lst_qual,dtype=str))] }
     #***** FORMAT *****#
     lst_format_id = ['GT', 'DP', 'AF']
     # Merge GT field
@@ -272,7 +276,21 @@ for var_id in dico_vcf:
     writer.write_record(new_record)
 writer.close()
 
-# Sort and validate final merged VCF
+
+
+#***** POST-PROCESSING *****#
+# Sort
 sortVCF(pathMergeUnsortedVCF,pathMergeVCF)
+# Validate
 boolvalid,lst_errors = validateVCF(path_vcfvalidator,pathMergeVCF)
-if boolvalid==False: exit("[Nk_mergeVCFs] Validate VCF `"+os.path.basename(pathMergeVCF)+"`\n    "+"\n    ".join(lst_errors))
+if boolvalid==False: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] Validate VCF `"+os.path.basename(pathMergeVCF)+"`\n    "+"\n    ".join(lst_errors))
+# bgzip
+cmd_bgzip = "bgzip -f "+pathMergeVCF
+process = subprocess.Popen([cmd_bgzip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+out, err = process.communicate()
+if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] bgzip VCF `"+os.path.basename(pathMergeVCF)+"`\n")
+# tabix
+cmd_tabix = "tabix -p vcf "+pathMergeVCF+".gz"
+process = subprocess.Popen([cmd_tabix], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+out, err = process.communicate()
+if process.returncode!=0: exit("🅴 🆁 🆁 🅾 🆁\n[Nk_mergeVCFs] tabix VCF `"+os.path.basename(pathMergeVCF)+".gz`\n")
