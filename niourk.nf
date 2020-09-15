@@ -82,6 +82,7 @@ if (params.help) exit 0, helpMessage("")
 if (!params.path_bam) exit 1, helpMessage("\n🅴 🆁 🆁 🅾 🆁\nParameter `--path_bam` is required")
 if (!file(params.path_bam).exists()) exit 1, helpMessage("\n🅴 🆁 🆁 🅾 🆁\nPlease specify a valid directory for `--path_bam` (`"+params.path_bam+"`)")
 bamFiles = file(params.path_bam).list()
+bamDirName = file(params.path_bam).getName()
 bamCount = 0
 for( def bam : bamFiles ) { if (file(bam).getExtension()=="bam") bamCount+=1 }
 if (bamCount==0) exit 1, helpMessage("\n🅴 🆁 🆁 🅾 🆁\nAny BAM file found in `--path_bam` directory (`"+params.path_bam+"`)")
@@ -91,6 +92,8 @@ if (!params.path_out) exit 1, helpMessage("\n🅴 🆁 🆁 🅾 🆁\nParameter
 if (!file(params.path_out).isDirectory()) file(params.path_out).mkdir()
 pathDepth= file(params.path_out+"/depth")
 if (!pathDepth.isDirectory()) pathDepth.mkdir()
+pathFastqc= file(params.path_out+"/fastqc")
+if (!pathFastqc.isDirectory()) pathFastqc.mkdir()
 pathVCF = file(params.path_out+"/vcf")
 if (!pathVCF.isDirectory()) pathVCF.mkdir()
 pathVCFraw = file(params.path_out+"/vcf/raw")
@@ -270,7 +273,7 @@ process MakeNiourkBed {
     script:
     if (pathNiourkBedgz != "")
       """
-      python3 $workflow.projectDir/scripts/Nk_niourkBed.py $pathBed $pathGenes $pathGff $pathFile ${params.padding}
+      python3 $workflow.projectDir/scripts/Nk_makeBED.py $pathBed $pathGenes $pathGff $pathFile ${params.padding}
       """
 }
 
@@ -340,14 +343,14 @@ process BamPreprocessing {
       if (params.platform=="iontorrent")
       """
       samtools view -H ${sample}.bam > ${sample}_header.sam
-      samtools view -@ 8 -h ${sample}.bam | grep -Pv "@[CO|PV]" | ${params.path_elprep} sfm /dev/stdin /dev/stdout --filter-unmapped-reads --filter-mapping-quality ${params.min_mapq} --mark-duplicates --mark-optical-duplicates ${sample}_mark-optical-duplicates.txt --optical-duplicates-pixel-distance 2500 --remove-duplicates --sorting-order coordinate --clean-sam --bqsr ${sample}_bqsr_recall.txt --bqsr-reference ${pathFastaElprep} --known-sites ${params.path_elprep_files}/1000G-known-indels_${params.genome}.elsites,${params.path_elprep_files}/1000G-omni2.5_${params.genome}.elsites,${params.path_elprep_files}/1000G-phase1-snps-highconfidence_${params.genome}.elsites,${params.path_elprep_files}/dbsnp138_${params.genome}.elsites,${params.path_elprep_files}/Millsand1000G-goldstandard-indels_${params.genome}.elsites --nr-of-threads 8 --log-path ${sample}_elprepLog --intermediate-files-output-prefix ${sample} --intermediate-files-output-type sam --tmp-path /tmp | samtools view -@ 8 -b | samtools reheader ${sample}_header.sam - > ${sample}_elprep.bam
+      samtools view -@ ${task.cpus} -h ${sample}.bam | grep -Pv "@[CO|PV]" | ${params.path_elprep} sfm /dev/stdin /dev/stdout --filter-unmapped-reads --filter-mapping-quality ${params.min_mapq} --mark-duplicates --mark-optical-duplicates ${sample}_mark-optical-duplicates.txt --optical-duplicates-pixel-distance 2500 --remove-duplicates --sorting-order coordinate --clean-sam --bqsr ${sample}_bqsr_recall.txt --bqsr-reference ${pathFastaElprep} --known-sites ${params.path_elprep_files}/1000G-known-indels_${params.genome}.elsites,${params.path_elprep_files}/1000G-omni2.5_${params.genome}.elsites,${params.path_elprep_files}/1000G-phase1-snps-highconfidence_${params.genome}.elsites,${params.path_elprep_files}/dbsnp138_${params.genome}.elsites,${params.path_elprep_files}/Millsand1000G-goldstandard-indels_${params.genome}.elsites --nr-of-threads ${task.cpus} --log-path ${sample}_elprepLog --intermediate-files-output-prefix ${sample} --intermediate-files-output-type sam --tmp-path /tmp | samtools view -@ 8 -b | samtools reheader ${sample}_header.sam - > ${sample}_elprep.bam
       samtools index ${sample}_elprep.bam
       cp ${sample}_mark-optical-duplicates.txt ${pathFile}
       cp ${sample}_bqsr_recall.txt ${pathFile}
       """
       else
       """
-      ${params.path_elprep} sfm ${sample}.bam ${sample}_elprep.bam --filter-unmapped-reads --filter-mapping-quality ${params.min_mapq} --mark-duplicates --mark-optical-duplicates ${sample}_mark-optical-duplicates.txt --optical-duplicates-pixel-distance 2500 --remove-duplicates --sorting-order coordinate --clean-sam --bqsr ${sample}_bqsr_recall.txt --bqsr-reference ${pathFastaElprep} --known-sites ${params.path_elprep_files}/1000G-known-indels_${params.genome}.elsites,${params.path_elprep_files}/1000G-omni2.5_${params.genome}.elsites,${params.path_elprep_files}/1000G-phase1-snps-highconfidence_${params.genome}.elsites,${params.path_elprep_files}/dbsnp138_${params.genome}.elsites,${params.path_elprep_files}/Millsand1000G-goldstandard-indels_${params.genome}.elsites --nr-of-threads 8 --log-path ${sample}_elprepLog --intermediate-files-output-prefix ${sample} --intermediate-files-output-type sam --tmp-path /tmp
+      ${params.path_elprep} sfm ${sample}.bam ${sample}_elprep.bam --filter-unmapped-reads --filter-mapping-quality ${params.min_mapq} --mark-duplicates --mark-optical-duplicates ${sample}_mark-optical-duplicates.txt --optical-duplicates-pixel-distance 2500 --remove-duplicates --sorting-order coordinate --clean-sam --bqsr ${sample}_bqsr_recall.txt --bqsr-reference ${pathFastaElprep} --known-sites ${params.path_elprep_files}/1000G-known-indels_${params.genome}.elsites,${params.path_elprep_files}/1000G-omni2.5_${params.genome}.elsites,${params.path_elprep_files}/1000G-phase1-snps-highconfidence_${params.genome}.elsites,${params.path_elprep_files}/dbsnp138_${params.genome}.elsites,${params.path_elprep_files}/Millsand1000G-goldstandard-indels_${params.genome}.elsites --nr-of-threads ${task.cpus} --log-path ${sample}_elprepLog --intermediate-files-output-prefix ${sample} --intermediate-files-output-type sam --tmp-path /tmp
       samtools index ${sample}_elprep.bam
       cp ${sample}_mark-optical-duplicates.txt ${pathFile}
       cp ${sample}_bqsr_recall.txt ${pathFile}
@@ -355,7 +358,48 @@ process BamPreprocessing {
 }
 
 // split bam channel into multiples
-ch_BamPreprocessed.into { ch_SampleToDepth ; ch_SampleToGATKhc ; ch_SampleToMutect2 ; ch_SampleToTVC ; ch_SampleToDeepvariant ; ch_SampleToStrelka2 ; ch_SampleVCF }
+ch_BamPreprocessed.into { ch_SampleToFastQC ; ch_SampleToDepth ; ch_SampleToGATKhc ; ch_SampleToMutect2 ; ch_SampleToTVC ; ch_SampleToDeepvariant ; ch_SampleToStrelka2 ; ch_SampleVCF }
+
+
+/* FastQC */
+process fastqc {
+    publishDir pathFastqc, mode:'copy'
+    cache 'deep'
+    label 'cpus_8' // allow group process with same computing requirements
+
+    tag "${sample}" // tag in report tasks
+
+    input:
+      set sample, file(bam), file(bai) from ch_SampleToFastQC
+
+    output:
+      file("${sample}_elprep_fastqc*") into ch_fastQC
+
+    script:
+    """
+    fastqc --outdir . --format bam --threads ${task.cpus} --dir /tmp ${bam}
+    """  
+}  
+ 
+
+process multiqc {
+    publishDir pathFastqc, mode:'copy'
+    cache 'deep'
+    label 'cpus_8' // allow group process with same computing requirements
+
+    tag "${sample}" // tag in report tasks
+       
+    input:
+      file fastqc from ch_fastQC.collect()
+
+    output:
+      file("${bamDirName}_multiqc_report*")
+
+    script:
+    """
+    multiqc --force --title ${bamDirName} --filename ${bamDirName}_multiqc_report --tag DNA --data-format json --profile-runtime ${pathFastqc}
+    """
+}
 
 
 /* Compute BAM depth with mosdepth */
@@ -584,7 +628,7 @@ process MergeSampleCallsVCFs {
 
     script:
     """
-    python3 $workflow.projectDir/scripts/Nk_mergeVCFs.py ${params.path_gatk} ${params.path_vt} ${params.path_vcfvalidator} ${pathVCFraw} ${pathFasta} ${params.min_cov} ${sample} ${vcf}
+    python3 $workflow.projectDir/scripts/Nk_mergeVCF.py ${workflow.manifest.version} ${params.path_gatk} ${params.path_vt} ${params.path_vcfvalidator} ${pathVCFraw} ${pathFasta} ${params.min_cov} ${sample} ${vcf}
     """
 }
 
@@ -622,3 +666,6 @@ process VEPannotateVCFs {
     tabix -p vcf ${sample}_Nk_vep.vcf.gz
     """
 }
+
+
+
